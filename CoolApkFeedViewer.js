@@ -93,20 +93,74 @@ cool = {
   detail: function(id) {return 'https://api.coolapk.com/v6/feed/detail?id='+id;}
 };
 
-function feedRender(model) {
-  //console.log(model.message);
-  return document.createTextNode(model.message);
+function concat(xs, sep) {
+  var seprator = sep || '';
+  var result = [];
+  xs.forEach(function (x) { result.push(x); });
+  return result.join(seprator);
 }
 
-function replyRender(model) {}
+/**
+ * CoolApk Feed render
+ * [title](abbr: info + entityId + length)(href: shareUrl) [share_num]{!=0} [signature] [isXXX]
+ * [userInfo]
+ * <img>[message_cover]</img>
+ * Keywords: [message_keywords]
+ * [tags]
+ * <quote>[message_brief]</quote>
+ * [message]
+ * [picArr]
+ * [dateline] [lastupdate]
+ * [device_title] (abbr: device_name) [device_rom] [fromname](abbr: fromid)
+ * 
+ * [likenum] / [burynum] / [rank_score]
+ * [recent_like_list]
+ * [userLikeList]
+ * 
+ * [recent_hot_reply_ids] [commentnum](abbr: replynum, comment_block_num)
+ * [hotReplyRows]
+ * 
+ * ~> [recent_reply_ids]
+ */
+var _ = ' ';
+function feedRender(model) {
+  //console.log(model.message);
+  var mesg = document.createElement('p');
+  mesg.id = model.entityId;
+  mesg.innerHTML = (model.message || '未知消息');
+
+  var title = document.createElement('h2');
+  var titleabbr = document.createElement('abbr');
+  titleabbr.innerText = model.title || '未知标题';
+  titleabbr.title = concat([model.info, _, model.entityId, _, '长度=', model.message_length, ' @次数=', model.at_count]);
+  title.appendChild(titleabbr);
+
+  var share = document.createElement('a');
+  share.href = model.shareUrl;
+  share.innerText = model.share_num ==0? '分享' : model.share_num+' 次外链';
+
+  var widget = document.createElement('div');
+
+  [title, share, mesg].forEach(function (x) {widget.appendChild(x);});
+  //console.log(widget);
+  return widget;
+}
+
+/**
+ * CoolApk User model render
+ * | [displayUsername]{username != displayUsername} '('[username]')' (href: url) (abbr: level + groupid + uid + status) [admintype]
+ * [userAvatar] (src: userAvatar, href: userBigAvatar) | []
+ * | [logintime] [regdate]
+ */
+function userRender(model) {}
 
 function render(trans, destview) {
   if (trans.status !=200) {
     alert(":( Sorry, request to CoolApk API failed with response code " + trans.status + " and body " + trans.response);
   }
   var model = JSON.parse(trans.response);
-  //console.log(model);
   var data = model.data;
+  console.log(data);
   //console.log(destview);
   destview.appendChild(feedRender(data));
 }
